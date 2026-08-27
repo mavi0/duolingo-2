@@ -1,24 +1,30 @@
-name: Keep my Duolingo streak
+name: Learn Duolingo
 
 on:
   schedule:
     - cron: '0 9,22 * * *'
+  workflow_dispatch:
+    inputs:
+      lessons:
+        description: 'Number of lessons to complete'
+        required: false
+        default: 1
+        type: number
 
 jobs:
   study:
     runs-on: ubuntu-slim
     steps:
       - uses: actions/checkout@v4
-      - uses: oven-sh/setup-bun@v2
-      - run: bun index.js
+      - run: bash lesson.sh
         env:
           DUOLINGO_JWT: ${{ secrets.DUOLINGO_JWT }}
-          LESSONS: 1
+          LESSONS: ${{ inputs.lessons || 1 }}
   delete-old-runs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
-        actions: write
-        contents: read
+      actions: write
+      contents: read
     steps:
       - name: Delete workflow runs
         uses: Mattraks/delete-workflow-runs@v2
