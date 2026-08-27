@@ -36,10 +36,12 @@ for ((i = 0; i < LESSONS; i++)); do
 		"https://www.duolingo.com/2017-06-30/sessions")
 	ID=$(jq -r .id <<<"$SESSION")
 	NOW=$(date +%s)
-	RESULT=$("${CURL[@]}" -X PUT \
-		-d "$(jq --argjson start $((NOW - 60)) --argjson end "$NOW" \
-			'. + {heartsLeft: 0, startTime: $start, enableBonusPoints: false, endTime: $end, failed: false, maxInLessonStreak: 9, shouldLearnThings: true}' <<<"$SESSION")" \
+	BODY=$(mktemp)
+	jq --argjson start $((NOW - 60)) --argjson end "$NOW" \
+		'. + {heartsLeft: 0, startTime: $start, enableBonusPoints: false, endTime: $end, failed: false, maxInLessonStreak: 9, shouldLearnThings: true}' <<<"$SESSION" >"$BODY"
+	RESULT=$("${CURL[@]}" -X PUT -d @"$BODY" \
 		"https://www.duolingo.com/2017-06-30/sessions/$ID")
+	rm -f "$BODY"
 	XP=$((XP + $(jq .xpGain <<<"$RESULT")))
 done
 
